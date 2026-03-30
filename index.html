@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Tanam Padi PRO</title>
+
+<style>
+:root {
+  --primary: #81c784; 
+  --bg-dark: #121212;
+  --card-dark: #1e1e1e;
+  --input-bg: #2d2d2d;
+  --text-main: #e0e0e0;
+  --text-muted: #b0b0b0;
+  --orange: #ffb74d;
+  --blue: #64b5f6;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  margin: 0;
+}
+
+/* TOMBOL HOME MELAYANG */
+.btn-home {
+  position: fixed;
+  bottom: 25px;
+  right: 20px;
+  background: var(--primary);
+  color: #121212;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  font-size: 26px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  z-index: 9999;
+  transition: all 0.3s ease;
+  border: 2px solid white;
+}
+
+.btn-home:hover {
+  transform: scale(1.1);
+  background: white;
+  color: var(--primary);
+}
+
+.container {
+  background: var(--card-dark);
+  max-width: 500px;
+  width: 100%;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+h2 { 
+  text-align: center; 
+  color: var(--primary); 
+  margin-bottom: 25px;
+  font-weight: 700;
+}
+
+label { 
+  font-weight: 600; 
+  font-size: 0.85rem; 
+  color: var(--text-muted); 
+  display: block; 
+  margin-top: 15px;
+  margin-left: 5px;
+}
+
+input, select, button { 
+  width: 100%; 
+  padding: 14px; 
+  margin-top: 8px; 
+  border-radius: 12px; 
+  border: 1px solid #444; 
+  background: var(--input-bg);
+  color: white;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+button { 
+  background: var(--primary); 
+  color: #121212; 
+  border: none; 
+  font-weight: bold; 
+  cursor: pointer; 
+  margin-top: 25px; 
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+button:hover { 
+  background: #a5d6a7; 
+  transform: translateY(-2px);
+}
+
+.result { 
+  margin-top: 30px; 
+  display: none; 
+  border-top: 1px solid #333; 
+  padding-top: 20px;
+}
+
+.card { 
+  background: #252525; 
+  padding: 18px; 
+  border-left: 4px solid var(--primary); 
+  margin-bottom: 15px; 
+  border-radius: 10px; 
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.card:hover { transform: scale(1.02); }
+
+.card b { color: var(--primary); display: block; margin-bottom: 6px; font-size: 0.95rem; }
+
+.panen { border-left-color: var(--orange); background: #2d261e; }
+.panen b { color: var(--orange); }
+
+.info-pupuk { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4; }
+
+.hst-badge { 
+  position: absolute; 
+  right: 12px; 
+  top: 12px; 
+  background: #333; 
+  color: var(--primary); 
+  padding: 3px 10px; 
+  border-radius: 8px; 
+  font-size: 0.75rem; 
+  font-weight: bold;
+  border: 1px solid var(--primary);
+}
+</style>
+</head>
+
+<body>
+
+<a href="https://mamank757.github.io/petani" class="btn-home" title="Kembali ke Dashboard Utama">🏠</a>
+
+<div class="container">
+  <h2>🌾 KALKULATOR PADI</h2>
+
+  <label>📅 TANGGAL TANAM</label>
+  <input type="date" id="tgl">
+
+  <label>🌾 VARIETAS PADI</label>
+  <select id="varietas">
+    <option value="77">Ultra Genjah (70-84 HST)</option>
+    <option value="88">Sangat Genjah (85-90 HST)</option>
+    <option value="100" selected>Genjah (91-105 HST)</option>
+    <option value="112">Sedang (106-115 HST)</option>
+    <option value="120">Dalam (116-125 HST)</option>
+  </select>
+
+  <label>📐 LUAS LAHAN (HEKTAR)</label>
+  <input type="number" id="luas" step="0.1" value="1">
+
+  <button onclick="hitung()">🔍 ANALISIS SEKARANG</button>
+
+  <div class="result" id="hasil"></div>
+</div>
+
+<script>
+function tglFormat(t) {
+  return new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+}
+
+function tambahHari(tanggal, hari) {
+  let d = new Date(tanggal);
+  d.setDate(d.getDate() + hari);
+  return d;
+}
+
+function hitung() {
+  const tglVal = document.getElementById("tgl").value;
+  const umur = parseInt(document.getElementById("varietas").value);
+  const luas = parseFloat(document.getElementById("luas").value) || 0;
+
+  if (!tglVal) { alert("Pilih tanggal tanam!"); return; }
+
+  const tanam = new Date(tglVal);
+  const hariIni = new Date();
+  const umurSekarang = Math.floor((hariIni - tanam)/(1000*60*60*24));
+
+  const p1_hst = 7;
+  const p2_hst = 25;
+  let p3_hst = umur - 55; 
+  if(p3_hst <= p2_hst) p3_hst = p2_hst + 15;
+
+  const p1 = tambahHari(tanam, p1_hst);
+  const p2 = tambahHari(tanam, p2_hst);
+  const p3 = tambahHari(tanam, p3_hst);
+  const panen = tambahHari(tanam, umur);
+  const estimasi = (luas * 6).toFixed(1);
+
+  document.getElementById("hasil").style.display = "block";
+  document.getElementById("hasil").innerHTML = `
+    <div class="card" style="border-left-color: var(--blue)">
+      <b>📊 STATUS TANAMAN</b>
+      Hari Ini: ${umurSekarang < 0 ? 'Belum Tanam' : umurSekarang + ' Hari Setelah Tanam'}
+    </div>
+
+    <div class="card">
+      <span class="hst-badge">${p1_hst} HST</span>
+      <b>🧪 PUPUK TAHAP I (AWAL)</b>
+      📅 ${tglFormat(p1)}
+      <div class="info-pupuk">Gunakan campuran Urea & NPK untuk memacu pertumbuhan vegetatif awal.</div>
+    </div>
+
+    <div class="card">
+      <span class="hst-badge">${p2_hst} HST</span>
+      <b>🧪 PUPUK TAHAP II (ANAKAN)</b>
+      📅 ${tglFormat(p2)}
+      <div class="info-pupuk">Fokus pada Urea untuk memaksimalkan jumlah anakan produktif.</div>
+    </div>
+
+    <div class="card">
+      <span class="hst-badge">${p3_hst} HST</span>
+      <b>🧪 PUPUK TAHAP III (BUNTING)</b>
+      📅 ${tglFormat(p3)}
+      <div class="info-pupuk">Fase Primordia. Tambahkan NPK/KCl untuk kualitas malai dan pengisian bulir.</div>
+    </div>
+
+    <div class="card panen">
+      <b>🌾 PREDIKSI PANEN</b>
+      📅 ${tglFormat(panen)}
+      <div class="info-pupuk">Estimasi waktu masak fisiologis. Siapkan tenaga kerja dan peralatan panen.</div>
+    </div>
+
+    <div class="card panen">
+      <b>💰 PROYEKSI HASIL GKP</b>
+      ± ${estimasi} Ton Gabah
+      <div class="info-pupuk">Berdasarkan luas lahan ${luas} ha dengan potensi rata-rata unggul.</div>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
