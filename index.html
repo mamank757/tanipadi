@@ -183,7 +183,7 @@ button:hover {
 
 <script>
 function tglFormat(t) {
-  return new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  return new Date(t).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function tambahHari(tanggal, hari) {
@@ -194,64 +194,96 @@ function tambahHari(tanggal, hari) {
 
 function hitung() {
   const tglVal = document.getElementById("tgl").value;
-  const umur = parseInt(document.getElementById("varietas").value);
+  const umurVarietas = parseInt(document.getElementById("varietas").value);
   const luas = parseFloat(document.getElementById("luas").value) || 0;
 
   if (!tglVal) { alert("Pilih tanggal tanam!"); return; }
 
   const tanam = new Date(tglVal);
   const hariIni = new Date();
-  const umurSekarang = Math.floor((hariIni - tanam)/(1000*60*60*24));
+  // Set waktu ke 00:00:00 untuk perbandingan tanggal yang akurat
+  hariIni.setHours(0, 0, 0, 0);
+  tanam.setHours(0, 0, 0, 0);
+
+  const selisihMilidetik = hariIni - tanam;
+  const umurSekarang = Math.floor(selisihMilidetik / (1000 * 60 * 60 * 24));
+
+  // Fungsi pembantu untuk menentukan gaya kartu berdasarkan HST
+  const getStatusStyle = (targetHst, nextHst = null) => {
+    if (umurSekarang > (nextHst || targetHst)) {
+      return { label: "✅ SELESAI", style: "opacity: 0.6; border-left-color: #666;" };
+    } else if (umurSekarang >= targetHst && (nextHst === null || umurSekarang < nextHst)) {
+      return { label: "🚀 SEDANG BERLANGSUNG", style: "border-left-width: 8px; background: #2e3b2e; border-left-color: #ccff90;" };
+    } else {
+      return { label: "🕒 MENDATANG", style: "" };
+    }
+  };
 
   const p1_hst = 7;
   const p2_hst = 25;
-  let p3_hst = umur - 55; 
-  if(p3_hst <= p2_hst) p3_hst = p2_hst + 15;
+  let p3_hst = umurVarietas - 55;
+  if (p3_hst <= p2_hst) p3_hst = p2_hst + 15;
 
   const p1 = tambahHari(tanam, p1_hst);
   const p2 = tambahHari(tanam, p2_hst);
   const p3 = tambahHari(tanam, p3_hst);
-  const panen = tambahHari(tanam, umur);
+  const panen = tambahHari(tanam, umurVarietas);
   const estimasi = (luas * 6).toFixed(1);
+
+  // Logika Status Berdasarkan HST
+  const s1 = getStatusStyle(p1_hst, p2_hst);
+  const s2 = getStatusStyle(p2_hst, p3_hst);
+  const s3 = getStatusStyle(p3_hst, umurVarietas);
+  const sPanen = umurSekarang >= umurVarietas ? { label: "🌾 SIAP PANEN", style: "background: #4a3721;" } : { label: "⏳ MENUNGGU MATANG", style: "" };
+
+  let statusTeks = "";
+  if (umurSekarang < 0) {
+    statusTeks = `Rencana Tanam (H${umurSekarang})`;
+  } else if (umurSekarang > umurVarietas) {
+    statusTeks = `Sudah Lewat Masa Panen (${umurSekarang} HST)`;
+  } else {
+    statusTeks = `${umurSekarang} Hari Setelah Tanam (HST)`;
+  }
 
   document.getElementById("hasil").style.display = "block";
   document.getElementById("hasil").innerHTML = `
-    <div class="card" style="border-left-color: var(--blue)">
-      <b>📊 STATUS TANAMAN</b>
-      Hari Ini: ${umurSekarang < 0 ? 'Belum Tanam' : umurSekarang + ' Hari Setelah Tanam'}
+    <div class="card" style="border-left-color: var(--blue); background: #1a237e33;">
+      <b>📊 STATUS REAL-TIME</b>
+      <span style="font-size: 1.2rem; font-weight: bold;">${statusTeks}</span>
     </div>
 
-    <div class="card">
-      <span class="hst-badge">${p1_hst} HST</span>
+    <div class="card" style="${s1.style}">
+      <span class="hst-badge">${s1.label} | ${p1_hst} HST</span>
       <b>🧪 PUPUK TAHAP I (AWAL)</b>
       📅 ${tglFormat(p1)}
       <div class="info-pupuk">Gunakan campuran Urea & NPK (1:2) untuk memacu pertumbuhan vegetatif awal.</div>
     </div>
 
-    <div class="card">
-      <span class="hst-badge">${p2_hst} HST</span>
+    <div class="card" style="${s2.style}">
+      <span class="hst-badge">${s2.label} | ${p2_hst} HST</span>
       <b>🧪 PUPUK TAHAP II (ANAKAN)</b>
       📅 ${tglFormat(p2)}
       <div class="info-pupuk">Fokus pada Urea untuk memaksimalkan jumlah anakan produktif.</div>
     </div>
 
-    <div class="card">
-      <span class="hst-badge">${p3_hst} HST</span>
+    <div class="card" style="${s3.style}">
+      <span class="hst-badge">${s3.label} | ${p3_hst} HST</span>
       <b>🧪 PUPUK TAHAP III (BUNTING)</b>
       📅 ${tglFormat(p3)}
       <div class="info-pupuk">Fase Primordia. Tambahkan NPK untuk kualitas malai dan pengisian bulir.</div>
     </div>
 
-    <div class="card panen">
+    <div class="card panen" style="${sPanen.style}">
+      <span class="hst-badge">${sPanen.label}</span>
       <b>🌾 PREDIKSI PANEN</b>
       📅 ${tglFormat(panen)}
-      <div class="info-pupuk">Estimasi waktu masak fisiologis. Siapkan tenaga kerja dan peralatan panen.</div>
+      <div class="info-pupuk">Estimasi waktu masak fisiologis. Siapkan tenaga kerja dan peralatan.</div>
     </div>
 
-    <div class="card panen">
+    <div class="card panen" style="border-left-color: #4db6ac;">
       <b>💰 PROYEKSI HASIL GKP</b>
       ± ${estimasi} Ton Gabah
-      <div class="info-pupuk">Berdasarkan luas lahan ${luas} ha dengan potensi rata-rata unggul.</div>
+      <div class="info-pupuk">Berdasarkan luas lahan ${luas} ha dengan potensi rata-rata wilayah Bola.</div>
     </div>
   `;
 }
