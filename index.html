@@ -28,22 +28,23 @@ body {
 }
 
 /* TOMBOL HOME MELAYANG */
+/* TOMBOL HOME MELAYANG DI KIRI ATAS */
 .btn-home {
-  position: left;
-  bottom: 25px;
-  right: 20px;
+  position: fixed; /* Tetap di posisi meski layar di-scroll */
+  top: 15px;      /* Jarak dari atas */
+  left: 15px;     /* Jarak dari kiri */
   background: var(--primary);
   color: #121212;
-  width: 55px;
-  height: 55px;
+  width: 45px;    /* Sedikit diperkecil agar lebih rapi di atas */
+  height: 45px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   text-decoration: none;
-  font-size: 26px;
+  font-size: 20px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  z-index: 9999;
+  z-index: 10000; /* Pastikan selalu di depan */
   transition: all 0.3s ease;
   border: 2px solid white;
 }
